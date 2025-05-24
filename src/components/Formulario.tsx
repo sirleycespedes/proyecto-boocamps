@@ -1,233 +1,194 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+
+
+
+import { useState } from "react"
+
+
+interface FormData {
+  nombre: string
+  telefono: string
+  correo: string
+  mensaje: string
+}
 
 interface FormErrors {
-  nombre?: string;
-  email?: string;
-  telefono?: string;
-  mensaje?: string;
+  nombre?: string
+  telefono?: string
+  correo?: string
+  mensaje?: string
 }
 
-const formTitleStyles: React.CSSProperties = {
-  textAlign: 'center',
-  marginBottom: '20px',
-  color: '#333'
-};
+export default function Formulario() {
+  const [formData, setFormData] = useState<FormData>({
+    nombre: "",
+    telefono: "",
+    correo: "",
+    mensaje: "",
+  })
 
-const formStyles: React.CSSProperties = {
-  maxWidth: '600px',
-  margin: '40px auto',
-  padding: '30px',
-  background: '#fff',
-  borderRadius: '8px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-};
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState("")
 
-const Formulario = () => {
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {}
 
-    const [error, setError] = useState<string | null>(null);// Estado para almacenar los datos del formulario
-    const [errors, setErrors] = useState<FormErrors>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitSuccess, setSubmitSuccess] = useState(false);
-        const [formData, setFormData] = useState({
-        nombre: '',
-        email: '',
-        telefono: '',
-        mensaje: ''
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = "El nombre es requerido"
+    }
 
-    });
+    if (!formData.telefono.trim()) {
+      newErrors.telefono = "El teléfono es requerido"
+    } else if (!/^\d{10}$/.test(formData.telefono.replace(/\s/g, ""))) {
+      newErrors.telefono = "El teléfono debe tener 10 dígitos"
+    }
 
+    if (!formData.correo.trim()) {
+      newErrors.correo = "El correo es requerido"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
+      newErrors.correo = "El correo no es válido"
+    }
 
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {};
-        
-        // Validar nombre
-        if (formData.nombre.trim().length < 3) {
-            newErrors.nombre = 'El nombre debe tener al menos 3 caracteres';
-        }
+    if (!formData.mensaje.trim()) {
+      newErrors.mensaje = "El mensaje es requerido"
+    }
 
-        // Validar email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            newErrors.email = 'Ingresa un email válido';
-        }
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
-        // Validar teléfono
-        const phoneRegex = /^\d{10}$/;
-        if (!phoneRegex.test(formData.telefono)) {
-            newErrors.telefono = 'Ingresa un número de 10 dígitos';
-        }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
 
-        // Validar mensaje
-        if (formData.mensaje.trim().length < 10) {
-            newErrors.mensaje = 'El mensaje debe tener al menos 10 caracteres';
-        }
+    // Limpiar error cuando el usuario empiece a escribir
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }))
+    }
+  }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-    //Función para manejar cambios en los inputs
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
-        // Limpiar error del campo cuando el usuario empiece a escribir
-        if (errors[name as keyof FormErrors]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: undefined
-            }));
-        }
-    };
-    //Función para manejar el envío del formulario
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        
-        console.log("Formulario")
+    if (!validateForm()) {
+      return
+    }
 
-        const isValid = validateForm();
-        console.log("Validación del formulario:", isValid);
-        console.log("Datos del formulario:", formData);
+    setIsSubmitting(true)
+    setSubmitMessage("")
 
-        if (isValid) {
-            try {
-                // Simulamos una llamada a API
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Mostramos mensaje de éxito
-                setSubmitSuccess(true);
-                
-                // Limpiamos el formulario
-                setFormData({
-                    nombre: '',
-                    email: '',
-                    telefono: '',
-                    mensaje: ''
-                });
+    try {
+      // Simular envío del formulario
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-                // Ocultamos el mensaje de éxito después de 3 segundos
-                setTimeout(() => {
-                    setSubmitSuccess(false);
-                }, 3000);
+      console.log("Datos del formulario:", formData)
+      setSubmitMessage("¡Mensaje enviado correctamente!")
 
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-                setError(errorMessage);
-                
-                setTimeout(() => {
-                    setError(null);
-                }, 3000);
-            } finally {
-                setIsSubmitting(false);
-            }
-        } else {
-              console.log("Errores de validación:", errors);
-              setIsSubmitting(false);
-        }
-    };
+      // Limpiar formulario
+      setFormData({
+        nombre: "",
+        telefono: "",
+        correo: "",
+        mensaje: "",
+      })
+    } catch (error) {
+      console.error(error)
+      setSubmitMessage("Error al enviar el mensaje. Inténtalo de nuevo.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
-        <div style={formStyles}>
-          <h2 style={formTitleStyles}>Contáctanos</h2>
-          {submitSuccess && (
-                <div style={successMessageStyles}>
-                    ¡Mensaje enviado con éxito!
-                </div>
-            )}
-            {error && (
-                <div style={errorMessageStyles}>
-                    {error}
-                </div>
-            )}
-          <form className="formulario" onSubmit={handleSubmit}>
-            <div className="row">
-              <div className="six columns">
-                  <label htmlFor="nombre">Nombre Completo</label>
-                  <input 
-                      className={`u-full-width ${errors.nombre ? 'error-input' : ''}`}
-                      type="text" 
-                      placeholder="Tu nombre" 
-                      id="nombre"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleChange}
-                      required
-                  />
-                  {errors.nombre && <span className="error-message">{errors.nombre}</span>}
-              </div>
-              <div className="six columns">
-                <label htmlFor="email">Correo Electrónico</label>
-                <input 
-                  className="u-full-width" 
-                  type="email" 
-                  placeholder="tu@email.com" 
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+    <div className="form-container">
+      <div className="form-card">
+        <div className="form-header">
+          <h2 className="form-title">Contáctanos</h2>
+        </div>
+        <div className="form-content">
+          <form onSubmit={handleSubmit} className="contact-form">
+            <div className="form-group">
+              <label htmlFor="nombre" className="form-label">
+                Nombre *
+              </label>
+              <input
+                id="nombre"
+                name="nombre"
+                type="text"
+                value={formData.nombre}
+                onChange={handleInputChange}
+                className="form-input"
+                placeholder="Tu nombre completo"
+              />
+              {errors.nombre && <p className="error-message">{errors.nombre}</p>}
             </div>
 
-            <div className="row">
-              <div className="six columns">
-                <label htmlFor="telefono">Teléfono</label>
-                <input 
-                  className="u-full-width" 
-                  type="tel" 
-                  placeholder="Tu teléfono" 
-                  id="telefono"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="telefono" className="form-label">
+                Teléfono *
+              </label>
+              <input
+                id="telefono"
+                name="telefono"
+                type="tel"
+                value={formData.telefono}
+                onChange={handleInputChange}
+                className="form-input"
+                placeholder="1234567890"
+              />
+              {errors.telefono && <p className="error-message">{errors.telefono}</p>}
             </div>
 
-            <label htmlFor="mensaje">Mensaje</label>
-            <textarea 
-              className="u-full-width" 
-              placeholder="Tu mensaje" 
-              id="mensaje"
-              name="mensaje"
-              value={formData.mensaje}
-              onChange={handleChange}
-              required
-            ></textarea>
+            <div className="form-group">
+              <label htmlFor="correo" className="form-label">
+                Correo Electrónico *
+              </label>
+              <input
+                id="correo"
+                name="correo"
+                type="email"
+                value={formData.correo}
+                onChange={handleInputChange}
+                className="form-input"
+                placeholder="tu@email.com"
+              />
+              {errors.correo && <p className="error-message">{errors.correo}</p>}
+            </div>
 
-            <input 
-                    type="submit" 
-                    value={isSubmitting ? "Enviando..." : "Enviar Mensaje"} 
-                    className="button-primary u-full-width"
-                    disabled={isSubmitting}
-            />
+            <div className="form-group">
+              <label htmlFor="mensaje" className="form-label">
+                Mensaje *
+              </label>
+              <textarea
+                id="mensaje"
+                name="mensaje"
+                value={formData.mensaje}
+                onChange={handleInputChange}
+                className="form-textarea"
+                placeholder="Escribe tu mensaje aquí..."
+                rows={4}
+              />
+              {errors.mensaje && <p className="error-message">{errors.mensaje}</p>}
+            </div>
+
+            <button type="submit" disabled={isSubmitting} className={`submit-button ${isSubmitting ? "loading" : ""}`}>
+              {isSubmitting ? "Enviando..." : "Enviar Mensaje"}
+            </button>
+
+            {submitMessage && (
+              <p className={`submit-message ${submitMessage.includes("Error") ? "error" : "success"}`}>
+                {submitMessage}
+              </p>
+            )}
           </form>
         </div>
+      </div>
+    </div>
   )
 }
-
-const successMessageStyles: React.CSSProperties = {
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    padding: '10px',
-    borderRadius: '4px',
-    marginBottom: '20px',
-    textAlign: 'center'
-};
-
-const errorMessageStyles: React.CSSProperties = {
-    backgroundColor: '#ff4444',
-    color: 'white',
-    padding: '10px',
-    borderRadius: '4px',
-    marginBottom: '20px',
-    textAlign: 'center'
-};
-
-export default Formulario
